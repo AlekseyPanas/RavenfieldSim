@@ -1,13 +1,13 @@
 import pygame
 import Global
 import copy
-import Layer
+import constants
 
 
 class Slider:
     def __init__(self, minimum, maximum, center, length):
         # Constants
-        self.SLIDER_PIECE_WIDTH = 7
+        self.SLIDER_PIECE_WIDTH = 8
 
         # Maximum and minimum value of slider
         self.minimum = minimum
@@ -30,7 +30,8 @@ class Slider:
         # Is the slider being moved
         self.dragging = False
 
-        self.slider_surface = self.grid_surface = pygame.Surface((self.length, 20), pygame.SRCALPHA, 32)
+        self.slider_surface = None
+        self.clear_surface()
 
     # Shift determines what positions need to be shifted so that events positions are relative to the whole screen
     def run_slider(self, screen, visual_lock, event_lock, update_lock, shift):
@@ -41,12 +42,24 @@ class Slider:
         if not update_lock:
             self.update()
 
+    def clear_surface(self):
+        self.slider_surface = pygame.Surface((self.length, 50), pygame.SRCALPHA, 32)
+
     def draw(self, screen):
         # Clears surfaces
-        self.slider_surface = self.grid_surface = pygame.Surface((self.length, 20), pygame.SRCALPHA, 32)
+        self.clear_surface()
 
-        pygame.draw.rect(self.slider_surface, (255, 255, 255), ((0, self.SLIDER_PIECE_WIDTH), (self.length, 6)))
-        pygame.draw.rect(self.slider_surface, (200, 200, 200), ((self.slider_pos, 0), (8, 20)))
+        # Draws decorative circles
+        pygame.draw.circle(self.slider_surface, (255, 255, 255), (3, 10), 5)
+        pygame.draw.circle(self.slider_surface, (255, 255, 255), (self.length - 3, 10), 5)
+
+        # Draws slider
+        pygame.draw.rect(self.slider_surface, (255, 255, 255), ((0, 7), (self.length, 6)))
+        pygame.draw.rect(self.slider_surface, (200, 200, 200), ((self.slider_pos, 0), (self.SLIDER_PIECE_WIDTH, 20)))
+
+        # Draws value
+        rendered_text = constants.UNIT_NUM_FONT.render(str(self.value), False, (0, 0, 0))
+        self.slider_surface.blit(rendered_text, (self.slider_surface.get_width() / 2 - rendered_text.get_width() / 2, 25))
 
         screen.blit(self.slider_surface, (self.center[0] - (self.length / 2), self.center[1] - 10))
 
@@ -75,6 +88,10 @@ class Slider:
             self.slider_pos = self.length - self.SLIDER_PIECE_WIDTH
         elif self.slider_pos <= 0:
             self.slider_pos = 0
+
+        # Updates slider value
+        self.value = self.minimum + ((self.slider_pos / (self.length - self.SLIDER_PIECE_WIDTH)) * (self.maximum - self.minimum))
+        self.value = int(self.value)
 
 
 class UnitSidebar:
