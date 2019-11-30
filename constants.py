@@ -56,6 +56,7 @@ HAMMRT_dict = {"w": 4, "d": 1, "p": 3, "m": 7, "h": 5, "t": 2}
 CITY_NAME_FONT = pygame.font.SysFont("Arial Black", 15)
 UNIT_NUM_FONT = pygame.font.SysFont("Impact", 20)
 TINY_FONT = pygame.font.SysFont("Minion Web", 20)
+HELVETICA_FONT = pygame.font.SysFont("Helvetica", 25)
 
 # The glow highlight below a selected unit
 GLOW_SIZE = 100

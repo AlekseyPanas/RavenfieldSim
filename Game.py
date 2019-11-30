@@ -78,17 +78,30 @@ class Game(Layer.Layer):
             # Selects first unit in list that hasn't moved
             self.selected_unit = list(filter(lambda x: not x.quantity_not_moved == 0, self.units))[0]
             self.selected_unit.selected = True
-            # Calls event which will control unit movement
+            # Calls event which will control unit movement. Unit movement manages unit battle prompt
             if not self.event_lock:
                 self.move_units_event()
             # Runs only if the above did not end the update
             if not self.update_lock:
                 # Combines units in same tile
                 self.units = Unit.Unit.stack(self.units)
-                # Checks if all units moved to change gamestate
-                if not len(list(filter(lambda x: not x.quantity_not_moved == 0, self.units))):
-                    self.selected_unit = None
-                    self.gamestate -= 1
+                # Checks city capture
+                self.check_city_capture()
+
+                self.check_end_unit_movement()
+
+    def check_city_capture(self):
+        for unit in self.units:
+            for city in self.cities:
+                if tuple(unit.pos) == city.pos:
+                    if unit.owner != city.owner:
+                        city.owner = unit.owner
+
+    def check_end_unit_movement(self):
+        # Checks if all units moved to change gamestate
+        if not len(list(filter(lambda x: not x.quantity_not_moved == 0, self.units))):
+            self.selected_unit = None
+            self.gamestate -= 1
 
     def move_units_event(self):
         for event in Globe.events:
@@ -101,6 +114,8 @@ class Game(Layer.Layer):
                     self.selected_unit.move(self.unit_sidebar.unit_slider.value, [0, 1], self.units)
                 elif event.key == pygame.K_UP:
                     self.selected_unit.move(self.unit_sidebar.unit_slider.value, [0, -1], self.units)
+                elif event.key == pygame.K_SPACE:
+                    self.selected_unit.move(self.selected_unit.quantity, [0, 0], self.units)
 
     def start_turn(self):
         # Resets all units

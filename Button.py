@@ -23,7 +23,7 @@ class Button:
         # Blits rect
         pygame.draw.rect(self.button_surface, self.color, (0, 0, self.size[0], self.size[1]))
         # Selected circle
-        if self.selected and (self.text is not None):
+        if self.selected and (self.text is None):
             pygame.draw.circle(self.button_surface, (255, 255, 255), (int(self.size[0] / 2), int(self.size[1] / 2)), 8)
         # Draws text
         if self.text is not None:

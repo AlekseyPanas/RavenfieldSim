@@ -52,14 +52,24 @@ class Popup(Layer.Layer):
         self.popup_surface.blit(self.shadow, (0, 0))
 
         # Draws box
-        pygame.draw.rect(self.popup_surface, (0, 0, 0), (20, 20, 400, 300))
-        pygame.draw.rect(self.popup_surface, (255, 255, 255), (30, 30, 380, 280))
+        pygame.draw.rect(self.popup_surface, (0, 0, 0, 220), (20, 20, 400, 300))
+        pygame.draw.rect(self.popup_surface, (255, 255, 255, 220), (30, 30, 380, 280))
 
         # Draws text
         rendered_text = constants.UNIT_NUM_FONT.render("Who is the winner?", False, (0, 0, 0))
         self.popup_surface.blit(rendered_text, (40, 35))
         rendered_text = constants.UNIT_NUM_FONT.render("How many left?", False, (0, 0, 0))
         self.popup_surface.blit(rendered_text, (40, 180))
+
+        # Draws status
+        rendered_text = constants.UNIT_NUM_FONT.render("FIGHT STATUS:", False, (0, 0, 0))
+        self.popup_surface.blit(rendered_text, (255, 40))
+        rendered_text = constants.HELVETICA_FONT.render("Blue Units: " + str(self.blue_conflicting.quantity), False,
+                                                        constants.BLUE_COLOR)
+        self.popup_surface.blit(rendered_text, (255, 70))
+        rendered_text = constants.HELVETICA_FONT.render("Red Units: " + str(self.red_conflicting.quantity), False,
+                                                        constants.RED_COLOR)
+        self.popup_surface.blit(rendered_text, (255, 90))
 
         # Draws buttons
         self.blue_button.draw(self.popup_surface)
@@ -79,9 +89,25 @@ class Popup(Layer.Layer):
                 if self.blue_button.clicked(actual_pos):
                     self.blue_button.selected = True
                     self.red_button.selected = False
-                elif self.red_button.clicked(actual_pos):
+                if self.red_button.clicked(actual_pos):
                     self.blue_button.selected = False
                     self.red_button.selected = True
-                elif self.done_button.clicked(actual_pos):
+                # If done button is pressed, acts according to the popup
+                if self.done_button.clicked(actual_pos):
                     if self.blue_button.selected or self.red_button.selected:
-                        pass
+                        if self.red_button.selected:
+                            Globe.layers[0].units.remove(self.blue_conflicting)
+                            self.red_conflicting.quantity = self.slider.value
+                            self.red_conflicting.quantity_moved = self.slider.value
+                        elif self.blue_button.selected:
+                            Globe.layers[0].units.remove(self.red_conflicting)
+                            self.blue_conflicting.quantity = self.slider.value
+                            self.blue_conflicting.quantity_moved = self.slider.value
+                        # Removes the Popup
+                        Globe.layers.pop(-1)
+                        # Allows the layer to function again
+                        Globe.layers[0].update_lock = False
+                        # Checks city capture
+                        Globe.layers[0].check_city_capture()
+                        # Checks end of turn
+                        Globe.layers[0].check_end_unit_movement()

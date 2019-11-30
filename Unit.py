@@ -45,7 +45,6 @@ class Unit:
 
             self.set_moved()
 
-
         # Calculates units that are in the way of the movement and in opposite team
         attacking_units = [unit for unit in units if (unit.pos[0] == saved_pos[0]) and (unit.pos[1] == saved_pos[1])]
         if len(attacking_units) > 1:
@@ -54,8 +53,6 @@ class Unit:
                 Globe.layers[0].update_lock = True
                 # Creates a popup
                 Globe.layers.append(Popup.Popup(False, False, False, attacking_units))
-
-        print()
 
     @staticmethod
     def stack(unts):
