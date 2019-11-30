@@ -5,7 +5,7 @@ import constants
 
 
 class Slider:
-    def __init__(self, minimum, maximum, center, length):
+    def __init__(self, minimum, maximum, center, length, color):
         # Constants
         self.SLIDER_PIECE_WIDTH = 8
 
@@ -33,10 +33,15 @@ class Slider:
         self.slider_surface = None
         self.clear_surface()
 
+        # Slider color shade
+        self.color = color
+
     # Shift determines what positions need to be shifted so that events positions are relative to the whole screen
     def run_slider(self, screen, visual_lock, event_lock, update_lock, shift):
         if not visual_lock:
             self.draw(screen)
+            if self.minimum == -1:
+                print("DRAWING")
         if not event_lock:
             self.events(shift)
         if not update_lock:
@@ -50,12 +55,13 @@ class Slider:
         self.clear_surface()
 
         # Draws decorative circles
-        pygame.draw.circle(self.slider_surface, (255, 255, 255), (3, 10), 5)
-        pygame.draw.circle(self.slider_surface, (255, 255, 255), (self.length - 3, 10), 5)
+        pygame.draw.circle(self.slider_surface, self.color, (3, 10), 5)
+        pygame.draw.circle(self.slider_surface, self.color, (self.length - 3, 10), 5)
 
         # Draws slider
-        pygame.draw.rect(self.slider_surface, (255, 255, 255), ((0, 7), (self.length, 6)))
-        pygame.draw.rect(self.slider_surface, (200, 200, 200), ((self.slider_pos, 0), (self.SLIDER_PIECE_WIDTH, 20)))
+        pygame.draw.rect(self.slider_surface, self.color, ((0, 7), (self.length, 6)))
+        pygame.draw.rect(self.slider_surface, tuple([self.color[x] - 50 for x in range(3)]), ((self.slider_pos, 0),
+                                                                                       (self.SLIDER_PIECE_WIDTH, 20)))
 
         # Draws value
         rendered_text = constants.UNIT_NUM_FONT.render(str(self.value), False, (0, 0, 0))
@@ -98,13 +104,15 @@ class UnitSidebar:
     def __init__(self):
         self.sidebar_surface = pygame.Surface((200, 702), pygame.SRCALPHA, 32)
 
-        self.unit_slider = Slider(0, 10, (100, 200), 100)
+        self.unit_slider = Slider(0, 10, (100, 200), 170, (255, 255, 255))
 
         # where the surface will be blit on the main screen
         self.x_blit_pos = 700
         self.y_blit_pos = 0
 
-    def run_sidebar(self, screen, visual_lock, event_lock, update_lock):
+    def run_sidebar(self, screen, minimum, maximum, visual_lock, event_lock, update_lock):
+        self.unit_slider.minimum = minimum
+        self.unit_slider.maximum = maximum
         self.unit_slider.run_slider(self.sidebar_surface, visual_lock, event_lock, update_lock, (self.x_blit_pos,
                                                                                                  self.y_blit_pos))
 

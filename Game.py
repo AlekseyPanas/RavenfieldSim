@@ -60,7 +60,10 @@ class Game(Layer.Layer):
         if not self.update_lock:
             self.update()
 
-        self.unit_sidebar.run_sidebar(screen, self.visual_lock, self.event_lock, self.update_lock)
+        self.unit_sidebar.run_sidebar(screen, 1,
+                                      self.selected_unit.quantity_not_moved if self.selected_unit is not None else 0,
+                                      self.visual_lock,
+                                      self.event_lock, self.update_lock)
 
     def update(self):
         if self.gamestate == 0:
@@ -78,28 +81,26 @@ class Game(Layer.Layer):
             # Calls event which will control unit movement
             if not self.event_lock:
                 self.move_units_event()
-            # Combines units in same tile
-            self.units = Unit.Unit.stack(self.units)
-            # Checks if all units moved to change gamestate
-            if not len(list(filter(lambda x: not x.quantity_not_moved == 0, self.units))):
-                self.selected_unit = None
-                self.gamestate -= 1
+            # Runs only if the above did not end the update
+            if not self.update_lock:
+                # Combines units in same tile
+                self.units = Unit.Unit.stack(self.units)
+                # Checks if all units moved to change gamestate
+                if not len(list(filter(lambda x: not x.quantity_not_moved == 0, self.units))):
+                    self.selected_unit = None
+                    self.gamestate -= 1
 
     def move_units_event(self):
         for event in Globe.events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    self.selected_unit.pos[0] -= 1
-                    self.selected_unit.set_moved()
+                    self.selected_unit.move(self.unit_sidebar.unit_slider.value, [-1, 0], self.units)
                 elif event.key == pygame.K_RIGHT:
-                    self.selected_unit.pos[0] += 1
-                    self.selected_unit.set_moved()
+                    self.selected_unit.move(self.unit_sidebar.unit_slider.value, [1, 0], self.units)
                 elif event.key == pygame.K_DOWN:
-                    self.selected_unit.pos[1] += 1
-                    self.selected_unit.set_moved()
+                    self.selected_unit.move(self.unit_sidebar.unit_slider.value, [0, 1], self.units)
                 elif event.key == pygame.K_UP:
-                    self.selected_unit.pos[1] -= 1
-                    self.selected_unit.set_moved()
+                    self.selected_unit.move(self.unit_sidebar.unit_slider.value, [0, -1], self.units)
 
     def start_turn(self):
         # Resets all units

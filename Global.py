@@ -7,12 +7,6 @@ events = []
 
 
 def calculate_layer_locks(layers):
-    # Removes all locks
-    for layer in layers:
-        layer.visual_lock = False
-        layer.update_lock = False
-        layer.event_lock = False
-
     visual_lock = False
     update_lock = False
     event_lock = False
@@ -79,5 +73,5 @@ layers.append(Game.Game([City.City("Canyon", (10, 14), "b"),
                          City.City("Island", (6, 4), "r")],
                         [Unit.Unit([15, 15], 5, "b"),
                          Unit.Unit([18, 12], 5, "b"),
-                         Unit.Unit([4, 10], 5, "r"),
+                         Unit.Unit([18, 13], 5, "r"),
                          Unit.Unit([4, 9], 5, "r")], 25, TERRAIN))

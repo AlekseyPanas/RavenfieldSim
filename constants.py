@@ -23,6 +23,26 @@ def create_unit_glow(size, color):
     return surface
 
 
+# Creates a glow light to be drawn under the units when selected
+def create_shadow(size, color):
+    surface = pygame.Surface((size[0] + 50, size[1] + 50), pygame.SRCALPHA, 32)
+    surface = surface.convert_alpha()
+
+    pygame.draw.rect(surface, color, (25, 25, size[0], size[1]))
+
+    # Blurs the rect surface
+    surface = Image.frombytes('RGBA', surface.get_size(),
+                                  pygame.image.tostring(surface, 'RGBA', False)).filter(
+        ImageFilter.GaussianBlur(radius=7))
+    surface = pygame.image.frombuffer(surface.tobytes(), surface.size,
+                                                  surface.mode)
+
+    # This is how you set the transparency of this surface if needed
+    surface.fill((255, 255, 255, 200), None, pygame.BLEND_RGBA_MULT)
+
+    return surface
+
+
 SCREEN_SIZE = (900, 900)
 GRID_SURF_SIZE = (700, 700)
 
