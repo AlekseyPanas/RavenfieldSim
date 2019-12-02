@@ -41,10 +41,14 @@ class Game(Layer.Layer):
 
         # The gamestate is what controls the entire game
         # 0 = start of turn
+        # 1 = Unit movement
+        # 2 = City management
         self.gamestate = 0
 
         # Used to store unit instance of the selected unit
         self.selected_unit = None
+        # Used to store the city that is currently being analyzed
+        self.selected_city = None
 
         # sidebar for unit splitting and details
         self.unit_sidebar = UnitSidebar.UnitSidebar()
@@ -60,10 +64,15 @@ class Game(Layer.Layer):
         if not self.update_lock:
             self.update()
 
-        self.unit_sidebar.run_sidebar(screen, 1,
-                                      self.selected_unit.quantity_not_moved if self.selected_unit is not None else 0,
-                                      self.visual_lock,
-                                      self.event_lock, self.update_lock)
+        if self.gamestate == 1 or self.gamestate == 0:
+            self.unit_sidebar.run_sidebar(screen, 1,
+                                          self.selected_unit.quantity_not_moved if self.selected_unit is not None else 0,
+                                          self.visual_lock,
+                                          self.event_lock, self.update_lock)
+
+        elif self.gamestate == 2:
+            self.selected_city.draw_sidebar(screen, self.visual_lock)
+            self.selected_city.event_sidebar(self.event_lock)
 
     def update(self):
         if self.gamestate == 0:
@@ -90,6 +99,16 @@ class Game(Layer.Layer):
 
                 self.check_end_unit_movement()
 
+        # City management
+        elif self.gamestate == 2:
+            if self.selected_city is not None:
+                self.check_end_city_management()
+
+            # Selects first unit in list that hasn't moved
+            if self.selected_city is not None:
+                if self.selected_city.done:
+                    self.selected_city = list(filter(lambda x: not x.done, self.cities))[0]
+
     def check_city_capture(self):
         for unit in self.units:
             for city in self.cities:
@@ -97,11 +116,23 @@ class Game(Layer.Layer):
                     if unit.owner != city.owner:
                         city.owner = unit.owner
 
+    def check_end_city_management(self):
+        # Checks if all cities were analyzed
+        if not len(list(filter(lambda x: not x.done, self.cities))):
+            self.selected_city = None
+            # starts new turn
+            self.gamestate = 0
+
     def check_end_unit_movement(self):
         # Checks if all units moved to change gamestate
         if not len(list(filter(lambda x: not x.quantity_not_moved == 0, self.units))):
+            # Deselects last selected unit
+            self.selected_unit.selected = False
+
             self.selected_unit = None
-            self.gamestate -= 1
+            self.gamestate += 1
+            # Sets first selected city
+            self.selected_city = list(filter(lambda x: not x.done, self.cities))[0]
 
     def move_units_event(self):
         for event in Globe.events:
@@ -122,6 +153,11 @@ class Game(Layer.Layer):
         for unit in self.units:
             unit.quantity_not_moved = unit.quantity
             unit.quantity_moved = 0
+
+        # Resets all cities
+        for city in self.cities:
+            city.selected = False
+            city.done = False
 
         # Runs cities
         for city in self.cities:
@@ -187,6 +223,14 @@ class Game(Layer.Layer):
 
     def draw_cities(self):
         for city in self.cities:
+            # Draws glow circle if the unit is selected
+            if city == self.selected_city:
+                self.grid_surface.blit(constants.RED_HIGHLIGHT if city.owner == "r" else constants.BLUE_HIGHLIGHT,
+                                       ((city.pos[0] * self.edge_length) + (self.edge_length / 2) - (
+                                                   constants.GLOW_SIZE / 2),
+                                        (city.pos[1] * self.edge_length) + (self.edge_length / 2) - (
+                                                    constants.GLOW_SIZE / 2)))
+
             # Draws dot only if there's no units in city
             if not len(list(filter(lambda x: city.pos == tuple(x.pos), self.units))):
                 pygame.draw.circle(self.grid_surface, constants.BLUE_COLOR if city.owner == "b" else constants.RED_COLOR,
